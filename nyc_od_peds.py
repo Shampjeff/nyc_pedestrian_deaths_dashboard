@@ -85,27 +85,66 @@ z.add_tools(HoverTool(tooltips = tooltips))
 
 # BAR OF DEATHS BY BOROUGH AND YEAR
 # Grouped bar charts in bokeh are non-trivial
+
+pop_df = pd.read_csv('pop_borough', index_col=0)
+pop_df = pop_df[pop_df.year!=2012]
+pop_df = pop_df.groupby(['borough', 'year']).sum()['population'] \
+          .reset_index().sort_values(['year'], ascending=True)
+pop_df['year_mean_pop'] = pop_df.groupby('year').transform('mean')
+
 crash_df = year_df_main.groupby(['borough', 'year']).sum()[['total_deaths']] \
           .reset_index().sort_values(['year'], ascending=True)
+crash_df['year_mean_deaths'] = crash_df.groupby(["year"]).transform('mean')
+
+totals = []
+pops = []
+year_avg_deaths =[]
+year_avg_pops = []
+data = {}
+pop_data = {}
+
 boros = crash_df.borough.unique().tolist()
 years = crash_df.year.unique().tolist()
-totals = []
-year_totals_dict = {}
+year_avg_death = crash_df.year_mean_deaths.tolist()[::5]
+year_avg_pop = pop_df.year_mean_pop.tolist()[::5]
+
+for i in range(5):
+    year_avg_deaths.extend(year_avg_death)
+    year_avg_pops.extend(year_avg_pop)
+
 for i in years: # dict; 'year':[total_1, total_2, ..]
     counts = crash_df[crash_df.year == i] \
-                .total_deaths.tolist()
-    entry = {i:counts}
-    year_totals_dict.update(entry)
+                .sort_values('borough').total_deaths.tolist()
+    populations = pop_df[pop_df.year == i] \
+                .sort_values('borough').population.tolist()
+    entry_c = {i:counts}
+    entry_p = {i:populations}
+    data.update(entry_c)
+    pop_data.update(entry_p)
     
 for i in range(5): # list of ordered seq of totals
-    for k, v in year_totals_dict.items():
+    for k, v in data.items():
         totals.append(v[i])
+for i in range(5): # list of ordered seq of populations
+    for k, v in pop_data.items():
+        pops.append(v[i])
         
-totals = tuple(totals) # bokeh needs tuples strings for grouped bars
-# list of tuples [('Bronx', '2013'), ('brooklyn', '2013')...('Queens', '2018')]
-x = [(boro, str(year)) for boro in boros for year in years]
+percentage_pop = tuple([(total/pop)*10000 \
+                        for pop, total in zip(pops, 
+                                              totals)])
+avg_percent_pop = tuple([(total/avg_pop)*10000 \
+                         for avg_pop, total in zip(year_avg_pops,
+                                                   year_avg_deaths)])
 
-boro_source = ColumnDataSource(data=dict(x=x, total=totals))
+totals = tuple(totals) # bokeh needs tuples strings for grouped bars
+#list of tuples [ ('Bronx', '2013'), ('brooklyn', '2013')...('Queens', '2018') ]
+x = [(str(year), boro) for boro in boros for year in years]
+
+boro_source = ColumnDataSource(data=dict(x=x, 
+                                         total=totals,
+                                         avg_total=year_avg_deaths,
+                                         pop_percent=percentage_pop,
+                                         avg_percent=avg_percent_pop))
 x_range= FactorRange(*x)
 b = figure(x_range=x_range, 
            plot_width=1000, plot_height= 300,
@@ -120,15 +159,42 @@ b.vbar(x='x', top='total',
        fill_color=factor_cmap('x',
                               palette=colorblind['Colorblind'][7],
                               factors=boros,
-                              start=0, end=1))
+                              start=1, end=2))
+
 b.y_range.start = 0
 b.x_range.range_padding = 0.1
 b.xaxis.major_label_orientation = 1
 b.xgrid.grid_line_color = None
 
-tooltips = [('Deaths', '@total')]
+tooltips = [('Deaths', '@total'),
+           ('Average Yearly Deaths', '@avg_total')]
 b.add_tools(HoverTool(tooltips = tooltips))
 
+
+b1 = figure(x_range=x_range, 
+           plot_width=1000, plot_height= 300,
+           title="Percentage Deaths per 10,000",
+           toolbar_location=None, tools="")
+b1.vbar(x='x', top='pop_percent',
+       width=0.9, source=boro_source,
+       line_color = 'white',
+       hover_fill_color='red',
+       hover_alpha=1.0,
+       hover_line_color='gray',
+       fill_color=factor_cmap('x',
+                              palette=colorblind['Colorblind'][7],
+                              factors=boros,
+                              start=1, end=2))
+b1.y_range.start = 0
+b1.x_range.range_padding = 0.1
+b1.xaxis.major_label_orientation = 1
+b1.xgrid.grid_line_color = None
+
+tooltips = [('Percent Deaths', '@pop_percent'),
+            ('Yearly Avg', '@avg_percent')]
+b1.add_tools(HoverTool(tooltips = tooltips))
+
+layout_1 = column(b,b1)
 
 ## TOTALS BY BOROUGH
 
@@ -244,7 +310,7 @@ row2 = row(y)
 row3 = row([z,j])
 row4 = row(g)
 
-layout = column([row1, row2, row3,b, row4])
+layout = column([row1, row2, row3,layout_1, row4])
 curdoc().add_root(layout)
 
 
