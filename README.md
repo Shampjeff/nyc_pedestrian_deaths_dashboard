@@ -2,7 +2,7 @@
 Data Visualization and Dashboard of NYC Pedestrian and Cyclist Deaths 2012 - 2019
 
 Interactive data visualization for pedestrian and cyclist fatalities in New York City using Bokeh.
-As am avid biker and NYC resident, this project was driven by curiousity and search for trends. 
+As an avid biker and NYC resident, this project was driven by curiousity and search for trends. 
 
 As of 6/4/2020, this is still a work in progress but a basic mvp is presented. 
 
