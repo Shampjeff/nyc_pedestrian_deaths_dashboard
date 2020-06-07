@@ -24,3 +24,14 @@ This is only needed if you want to explore different datasets or change what I h
 To load the dashboard in your local browser, run the following command in your terminal
 
 `bokeh serve --show nyc_od_peds.py`
+
+
+## Example
+
+If you would like to the and use (some!) of the plots and interactive features they are viewable in the file
+`Pedestrian_deaths_dashboard_dev.ipynb` 
+
+## Data ETL
+
+The data ETL file is contained in the file, `Pedestrian Deaths Data Load and Cleaning.ipynb`. This file details how unassigned borough were determined, how vehicle types and contributing factors to the incidents were grouped. 
+
