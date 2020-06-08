@@ -100,7 +100,7 @@ totals = []
 pops = []
 year_avg_deaths =[]
 year_avg_pops = []
-data = {}
+group_data = {}
 pop_data = {}
 
 boros = crash_df.borough.unique().tolist()
@@ -119,11 +119,11 @@ for i in years: # dict; 'year':[total_1, total_2, ..]
                 .sort_values('borough').population.tolist()
     entry_c = {i:counts}
     entry_p = {i:populations}
-    data.update(entry_c)
+    group_data.update(entry_c)
     pop_data.update(entry_p)
     
 for i in range(5): # list of ordered seq of totals
-    for k, v in data.items():
+    for k, v in group_data.items():
         totals.append(v[i])
 for i in range(5): # list of ordered seq of populations
     for k, v in pop_data.items():
