@@ -11,12 +11,15 @@ from bokeh.palettes import colorblind
 import os
 
 # LOAD API KEYS FROM LOCAL
+# For local use. 
+
 # with open('keys.json') as f:
 #     keys = json.load(f)
 #     google_api_key = keys['google_map']
 #     nyc_od_token = keys['nycOD']
 
-#google_api_key = os.environ.get('GOOGLE_API_KEY')
+# activate testenv for api key in environment variable
+# google_api_key = os.environ.get('GOOGLE_API_KEY')
 
 # DATA PREP
 pop_df = pd.read_csv('bokeh-app/data/pop_borough', index_col=0)
