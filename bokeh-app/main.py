@@ -8,16 +8,19 @@ from bokeh.layouts import widgetbox, row, column, layout
 from bokeh.io import curdoc
 from bokeh.transform import factor_cmap
 from bokeh.palettes import colorblind
-import json
+import os
 
 # LOAD API KEYS FROM LOCAL
-with open('keys.json') as f:
-    keys = json.load(f)
-    google_api_key = keys['google_map']
-    nyc_od_token = keys['nycOD']
+# with open('keys.json') as f:
+#     keys = json.load(f)
+#     google_api_key = keys['google_map']
+#     nyc_od_token = keys['nycOD']
+
+#google_api_key = os.environ.get('GOOGLE_API_KEY')
 
 # DATA PREP
-df = pd.read_csv('data/peds_death_data', index_col=0)
+pop_df = pd.read_csv('bokeh-app/data/pop_borough', index_col=0)
+df = pd.read_csv('bokeh-app/data/peds_death_data', index_col=0)
 df = df.drop(df[(df.borough == 'NOT NYC') | (df.borough.isna() == True)].index)
 df = df.drop(['borough_gps', 'location'], axis=1)
 df['total_deaths'] = df.number_of_cyclist_killed+df.number_of_pedestrians_killed
@@ -86,7 +89,6 @@ z.add_tools(HoverTool(tooltips = tooltips))
 # BAR OF DEATHS BY BOROUGH AND YEAR
 # Grouped bar charts in bokeh are non-trivial
 
-pop_df = pd.read_csv('data/pop_borough', index_col=0)
 pop_df = pop_df[pop_df.year!=2012]
 pop_df = pop_df.groupby(['borough', 'year']).sum()['population'] \
           .reset_index().sort_values(['year'], ascending=True)
@@ -288,7 +290,7 @@ hover_map = HoverTool(
     formatters={'month_year':'datetime', }
 )
 
-g = gmap(google_api_key=google_api_key, 
+g = gmap(google_api_key="AIzaSyAAg_y_fFCK9hh61Ep4F03CS1yl3T2FUqo", 
          map_options=map_options, 
          title="NYC Pedestrian and Cyclists Deaths 2012 - 2020", 
          plot_width=1000, 
