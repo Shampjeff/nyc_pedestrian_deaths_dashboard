@@ -3,7 +3,7 @@ dependencies:
   - numpy
   - pandas
   - scipy
-  - datetime
   - pip
   - pip:
     - jupyter-server-proxy
+    - datetime
