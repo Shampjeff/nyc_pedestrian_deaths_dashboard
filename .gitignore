@@ -6,4 +6,4 @@ __pycache__/
 *.json
 .json
 .DS_Store
-
+.ipynb_checkpoints
