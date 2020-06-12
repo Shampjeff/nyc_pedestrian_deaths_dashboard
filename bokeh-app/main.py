@@ -17,7 +17,7 @@ with open('keys.json') as f:
     nyc_od_token = keys['nycOD']
 
 # DATA PREP
-df = pd.read_csv('peds_death_data', index_col=0)
+df = pd.read_csv('data/peds_death_data', index_col=0)
 df = df.drop(df[(df.borough == 'NOT NYC') | (df.borough.isna() == True)].index)
 df = df.drop(['borough_gps', 'location'], axis=1)
 df['total_deaths'] = df.number_of_cyclist_killed+df.number_of_pedestrians_killed
@@ -86,7 +86,7 @@ z.add_tools(HoverTool(tooltips = tooltips))
 # BAR OF DEATHS BY BOROUGH AND YEAR
 # Grouped bar charts in bokeh are non-trivial
 
-pop_df = pd.read_csv('pop_borough', index_col=0)
+pop_df = pd.read_csv('data/pop_borough', index_col=0)
 pop_df = pop_df[pop_df.year!=2012]
 pop_df = pop_df.groupby(['borough', 'year']).sum()['population'] \
           .reset_index().sort_values(['year'], ascending=True)
