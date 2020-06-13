@@ -3,7 +3,7 @@ Data Visualization and Dashboard of NYC Pedestrian and Cyclist Deaths 2012 - 201
 
 Click the link below to load the dashboard from Github!
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Shampjeff/nyc_pedestrian_deaths_dashboard/master?urlpath=/proxy/5006/bokeh-app/master)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Shampjeff/nyc_pedestrian_deaths_dashboard/master?urlpath=%2Fproxy%2F5006%2Fbokeh-app)
 
 
 Interactive data visualization for pedestrian and cyclist fatalities in New York City using Bokeh.
