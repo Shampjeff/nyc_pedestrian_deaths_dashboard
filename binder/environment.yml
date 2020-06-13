@@ -1,5 +1,5 @@
 dependencies:
-  - bokeh
+  - bokeh==1.0.4
   - numpy
   - pandas
   - scipy

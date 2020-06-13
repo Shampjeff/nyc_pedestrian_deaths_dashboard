@@ -22,6 +22,9 @@ import os
 # google_api_key = os.environ.get('GOOGLE_API_KEY')
 
 # DATA PREP
+import bokeh
+print(bokeh.__version__)
+
 pop_df = pd.read_csv('bokeh-app/data/pop_borough', index_col=0)
 df = pd.read_csv('bokeh-app/data/peds_death_data', index_col=0)
 df = df.drop(df[(df.borough == 'NOT NYC') | (df.borough.isna() == True)].index)
@@ -204,6 +207,7 @@ layout_1 = column(b,b1)
 ## TOTALS BY BOROUGH
 
 # OBJECTS FOR BOKEH
+
 source = ColumnDataSource(
     df.groupby(['month_year', 'borough']).sum() \
     ['total_deaths'].reset_index())
