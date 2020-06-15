@@ -3,27 +3,18 @@ import numpy as np
 import datetime
 from bokeh.plotting import figure, output_notebook, show, gmap
 from bokeh.models import CategoricalColorMapper, ColumnDataSource, Legend
-from bokeh.models import CheckboxGroup, HoverTool, GMapOptions, FactorRange
+from bokeh.models import CheckboxGroup, HoverTool, GMapOptions, FactorRange, Title
 from bokeh.layouts import widgetbox, row, column, layout
 from bokeh.io import curdoc
 from bokeh.transform import factor_cmap
 from bokeh.palettes import colorblind
 import os
 
-# LOAD API KEYS FROM LOCAL
-# For local use. 
-
-# with open('keys.json') as f:
-#     keys = json.load(f)
-#     google_api_key = keys['google_map']
-#     nyc_od_token = keys['nycOD']
-
 # activate testenv for api key in environment variable
 # google_api_key = os.environ.get('GOOGLE_API_KEY')
 
 # DATA PREP
 import bokeh
-print(bokeh.__version__)
 
 pop_df = pd.read_csv('bokeh-app/data/pop_borough', index_col=0)
 df = pd.read_csv('bokeh-app/data/peds_death_data', index_col=0)
@@ -222,13 +213,15 @@ checkbox = CheckboxGroup(
 )
 
 # PLOTTING CALLS
-p = figure(title = "Total Deaths by Month 2012 - 2020",
+p = figure(title = "All Incidents 2012 - 2020",
            x_axis_label = "Time", 
            y_axis_label = "Number of Deaths", 
            x_axis_type='datetime', 
            plot_width = 1000, 
            toolbar_location = 'above',
            tools='box_select, box_zoom, reset')
+p.add_layout(Title(text="Pedestrian and cyclist deaths in each borough by month",
+                   align="left", text_font_style="normal"),"above")
 p.circle(x='month_year', y='total_deaths', 
          selection_color="blue", 
          nonselection_fill_color='gray',
