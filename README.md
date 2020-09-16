@@ -1,7 +1,7 @@
 # NYC Open Data - Pedestrian Deaths Visualization Dashboard
 Data Visualization and Dashboard of NYC Pedestrian and Cyclist Deaths 2012 - 2019
 
-![Heroku](https://pyheroku-badge.herokuapp.com/?app=<main-bokeh-shamp>&style=flat))](https://main-bokeh-shamp.herokuapp.com/main)
+![Heroku](https://pyheroku-badge.herokuapp.com/?app=<main-bokeh-shamp>&style=flat)](https://main-bokeh-shamp.herokuapp.com/main)
 
 
 Interactive data visualization for pedestrian and cyclist fatalities in New York City using Bokeh.
