@@ -1,9 +1,0 @@
-dependencies:
-  - bokeh==1.0.4
-  - numpy
-  - pandas
-  - scipy
-  - pip
-  - pip:
-    - jupyter-server-proxy
-    - datetime
