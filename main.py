@@ -16,8 +16,10 @@ import os
 # DATA PREP
 import bokeh
 
-pop_df = pd.read_csv('bokeh-app/data/pop_borough', index_col=0)
-df = pd.read_csv('bokeh-app/data/peds_death_data', index_col=0)
+# 9/15 changed path to csv. deleted bokeh-app directory
+
+pop_df = pd.read_csv('data/pop_borough', index_col=0)
+df = pd.read_csv('data/peds_death_data', index_col=0)
 df = df.drop(df[(df.borough == 'NOT NYC') | (df.borough.isna() == True)].index)
 df = df.drop(['borough_gps', 'location'], axis=1)
 df['total_deaths'] = df.number_of_cyclist_killed+df.number_of_pedestrians_killed
