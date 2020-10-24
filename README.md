@@ -15,7 +15,7 @@ Currently, this dashboard runs both via a Heroku server and can be run locally.
 
 If you want to run this locally, complete the following steps:
 
-1. Necessary packages; pandas and bokeh (1.2.0)
+1. Necessary packages; pandas and bokeh (2.2.3)
 
 2. Google maps api key. Get one [here:](https://developers.google.com/maps/documentation/javascript/get-api-key)
 Be sure to enable a key for "Maps JavaScript API", there are many different keys and you need the right one. 
