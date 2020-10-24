@@ -2,21 +2,16 @@ import pandas as pd
 import numpy as np
 import datetime
 from bokeh.plotting import figure, output_notebook, show, gmap
-from bokeh.models import CategoricalColorMapper, ColumnDataSource, Legend
-from bokeh.models import CheckboxGroup, HoverTool, GMapOptions, FactorRange, Title
+from bokeh.models import CategoricalColorMapper, ColumnDataSource 
+from bokeh.models import CheckboxGroup, HoverTool, GMapOptions, Title
+from bokeh.models import Legend, CDSView, FactorRange, GroupFilter
 from bokeh.layouts import widgetbox, row, column, layout
 from bokeh.io import curdoc
 from bokeh.transform import factor_cmap
 from bokeh.palettes import colorblind
-import os
 
-# activate testenv for api key in environment variable
-# google_api_key = os.environ.get('GOOGLE_API_KEY')
 
 # DATA PREP
-import bokeh
-
-# 9/15 changed path to csv. deleted bokeh-app directory
 
 pop_df = pd.read_csv('data/pop_borough', index_col=0)
 df = pd.read_csv('data/peds_death_data', index_col=0)
@@ -24,6 +19,7 @@ df = df.drop(df[(df.borough == 'NOT NYC') | (df.borough.isna() == True)].index)
 df = df.drop(['borough_gps', 'location'], axis=1)
 df['total_deaths'] = df.number_of_cyclist_killed+df.number_of_pedestrians_killed
 df['month_year'] = pd.to_datetime(df['date']).dt.to_period('M')
+df['date'] = pd.to_datetime(df['date'])
 data = df.groupby(['month_year', 'borough']).sum() \
     ['total_deaths'].reset_index()
 
@@ -46,8 +42,10 @@ tooltips = [('Deaths', '@total_deaths')]
 y.add_tools(HoverTool(tooltips = tooltips))
 
 # Bar plot for Cause of Crash
-crash_df = df.groupby(['contributing_factor_vehicle_1']).sum()[['total_deaths']] \
-          .reset_index().sort_values(['total_deaths'], ascending=True)
+crash_df = df.groupby(['contributing_factor_vehicle_1']) \
+            .sum()[['total_deaths']] \
+            .reset_index() \
+            .sort_values(['total_deaths'], ascending=True)
 crash_df = crash_df.loc[crash_df["total_deaths"] >= 5]
 y_range = crash_df.contributing_factor_vehicle_1.unique()
 source_cause = ColumnDataSource(crash_df)
@@ -66,8 +64,10 @@ tooltips = [('Deaths', '@total_deaths')]
 j.add_tools(HoverTool(tooltips = tooltips))
 
 # Bar plot for Vehicle type involved
-crash_df = df.groupby(['vehicle_type_code1']).sum()[['total_deaths']] \
-          .reset_index().sort_values(['total_deaths'], ascending=True)
+crash_df = df.groupby(['vehicle_type_code1']) \
+            .sum()[['total_deaths']] \
+            .reset_index() \
+            .sort_values(['total_deaths'], ascending=True)
 crash_df = crash_df.loc[crash_df["total_deaths"] >= 5]
 y_range = crash_df.vehicle_type_code1.unique()
 source_vehicle = ColumnDataSource(crash_df)
@@ -89,13 +89,18 @@ z.add_tools(HoverTool(tooltips = tooltips))
 # Grouped bar charts in bokeh are non-trivial
 
 pop_df = pop_df[pop_df.year!=2012]
-pop_df = pop_df.groupby(['borough', 'year']).sum()['population'] \
-          .reset_index().sort_values(['year'], ascending=True)
+pop_df = pop_df.groupby(['borough', 'year']) \
+                .sum()['population'] \
+                .reset_index() \
+                .sort_values(['year'], ascending=True)
 pop_df['year_mean_pop'] = pop_df.groupby('year').transform('mean')
 
-crash_df = year_df_main.groupby(['borough', 'year']).sum()[['total_deaths']] \
-          .reset_index().sort_values(['year'], ascending=True)
-crash_df['year_mean_deaths'] = crash_df.groupby(["year"]).transform('mean')
+crash_df = year_df_main.groupby(['borough', 'year']) \
+                .sum()[['total_deaths']] \
+                .reset_index() \
+                .sort_values(['year'], ascending=True)
+crash_df['year_mean_deaths'] = crash_df.groupby(["year"]) \
+                                        .transform('mean')
 
 totals = []
 pops = []
@@ -197,62 +202,76 @@ b1.add_tools(HoverTool(tooltips = tooltips))
 
 layout_1 = column(b,b1)
 
-## TOTALS BY BOROUGH
+## ROLLING TOTALS BY BOROUGH
 
 # OBJECTS FOR BOKEH
 
-source = ColumnDataSource(
-    df.groupby(['month_year', 'borough']).sum() \
-    ['total_deaths'].reset_index())
-color_mapper = CategoricalColorMapper(
-        factors=sorted(df.borough.unique().tolist()),
-        palette=colorblind['Colorblind'][5]
-)
+boro_list = sorted(df.borough.unique().tolist())
 
 checkbox = CheckboxGroup(
-            labels=sorted(df.borough.unique().tolist()),
+            labels=boro_list,
             active=[0,1,2,3,4]
 )
+idx = pd.date_range(start=df.date.min(), 
+                   end=df.date.max())
+
+rolling_df_list = []
+for boro in boro_list:
+    tmp_df = df[df.borough ==boro] \
+        .groupby(['date']).sum()['total_deaths'] \
+        .reindex(idx, fill_value=0) \
+        .rolling(window=365) \
+        .sum() \
+        .reset_index() 
+    tmp_df['borough'] = boro
+    rolling_df_list.append(tmp_df)
+    
+rolling_df = pd.concat(rolling_df_list, axis=0)
+source = ColumnDataSource(rolling_df)
 
 # PLOTTING CALLS
-p = figure(title = "All Incidents 2012 - 2020",
+
+p = figure(title = "One Year Rolling Total 2012 - 2019",
            x_axis_label = "Time", 
            y_axis_label = "Number of Deaths", 
            x_axis_type='datetime', 
            plot_width = 1000, 
            toolbar_location = 'above',
-           tools='box_select, box_zoom, reset')
-p.add_layout(Title(text="Pedestrian and cyclist deaths in each borough by month",
+           tools='box_zoom, reset')
+
+p.add_layout(Title(text="Pedestrian and cyclist deaths in each borough",
                    align="left", text_font_style="normal"),"above")
-p.circle(x='month_year', y='total_deaths', 
-         selection_color="blue", 
-         nonselection_fill_color='gray',
-         nonselection_alpha=0.2, 
-         size=10,
-         source=source, 
-         color=dict(field='borough', transform=color_mapper),
-         legend='borough', 
-         hover_fill_color='red',
-         hover_alpha=0.5,
-         hover_line_color='white')
-hover_glyph = p.circle(x='month_year', y='total_deaths',
-                       source=source, size=11, alpha=0,
-                       hover_fill_color='red', hover_alpha=0.5)
-tooltips = [('Borough', '@borough'), 
-            ('Date', '@month_year{%Y-%m}'), 
-            ('Deaths', '@total_deaths')]
-p.add_tools(HoverTool(tooltips = tooltips,  
-                       mode='vline', 
+for i in range(5):
+    view=CDSView(source=source,
+                 filters=[GroupFilter(column_name='borough',
+                                      group=boro_list[i])])
+    p.circle(x='index', y='total_deaths', 
+             color=colorblind['Colorblind'][5][i], 
+             source=source,
+             view=view)
+    hover_glyph = p.circle(x='index', y='total_deaths',
+                       source=source,
+                       size=6, alpha=0,
+                       hover_fill_color='red',
+                       hover_alpha=0.9)
+
+tooltips = [('Borough', '@borough'),
+            ('Total', '@total_deaths'),
+            ('Date', "@index{%Y-%m-%d}")]
+
+p.add_tools(HoverTool(tooltips=tooltips,
+                       mode='mouse',
                        renderers=[hover_glyph],
-                       # yes there needs to a comma right \/
-                       formatters={'month_year':'datetime', }))
+                       formatters={'@index':'datetime', }))
+
+
 
 # INTERACTIVE CALLBACK
 def update_plot(attr, old, new):
     new_boros = [checkbox.labels[i] for i in checkbox.active]
-    new_df = data[data.borough.isin(new_boros)]
+    new_df = rolling_df[rolling_df.borough.isin(new_boros)]
     new_data = {
-        'month_year'  : new_df.loc[:, 'month_year'],
+        'index'  : new_df.loc[:, 'index'],
         'borough'     : new_df.loc[:, 'borough'],
         'total_deaths': new_df.loc[:, 'total_deaths']
     }
@@ -285,16 +304,16 @@ color_mapper = CategoricalColorMapper(
 )
 
 hover_map = HoverTool(
-    tooltips = [('Date', '@month_year{%Y-%m}'), 
+    tooltips = [('Date', '@month_year{%Y-%m-%d}'), 
                 ('Deaths', '@total_deaths'),
                 ('Vehicle Type', '@vehicle_type_code1'),
                 ('Cause', '@contributing_factor_vehicle_1')],   
-    formatters={'month_year':'datetime', }
+    formatters={'@month_year':'datetime', }
 )
 
-g = gmap(google_api_key="AIzaSyAAg_y_fFCK9hh61Ep4F03CS1yl3T2FUqo", 
+g = gmap(google_api_key="AIzaSyBxWE8h20e68cZFV_ppnVPef8w9hUKXf_k", 
          map_options=map_options, 
-         title="NYC Pedestrian and Cyclists Deaths 2012 - 2020", 
+         title="All Incidents 2012 - 2019", 
          plot_width=1000, 
          toolbar_location = 'above')
 
