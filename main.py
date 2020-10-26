@@ -12,21 +12,27 @@ from bokeh.palettes import colorblind
 
 
 # DATA PREP
-
+# Load data from previous cleaning work
 pop_df = pd.read_csv('data/pop_borough', index_col=0)
 df = pd.read_csv('data/peds_death_data', index_col=0)
+
+# Drop unneeded columns
 df = df.drop(df[(df.borough == 'NOT NYC') | (df.borough.isna() == True)].index)
 df = df.drop(['borough_gps', 'location'], axis=1)
+# Change data format to datetime
 df['total_deaths'] = df.number_of_cyclist_killed+df.number_of_pedestrians_killed
 df['month_year'] = pd.to_datetime(df['date']).dt.to_period('M')
 df['date'] = pd.to_datetime(df['date'])
+# Make a dataframe for deaths by borough and date
 data = df.groupby(['month_year', 'borough']).sum() \
     ['total_deaths'].reset_index()
 
 # SMALL AGGREGATE PLOTS
 # Line Plot for Totals
+# Dropping 2020 for incomplete data
 year_df_main = df[(df['year']!= 2012) & (df['year']!= 2020)]
 year_df = year_df_main.groupby(['year']).sum()['total_deaths'].reset_index()
+
 source_total = ColumnDataSource(year_df)
 y = figure(title = "Total Deaths by Year 2013 - 2019",
            x_axis_label = "Years", 
@@ -42,12 +48,15 @@ tooltips = [('Deaths', '@total_deaths')]
 y.add_tools(HoverTool(tooltips = tooltips))
 
 # Bar plot for Cause of Crash
+# More than 5 deaths to be shown
 crash_df = df.groupby(['contributing_factor_vehicle_1']) \
             .sum()[['total_deaths']] \
             .reset_index() \
             .sort_values(['total_deaths'], ascending=True)
 crash_df = crash_df.loc[crash_df["total_deaths"] >= 5]
 y_range = crash_df.contributing_factor_vehicle_1.unique()
+
+# Make data source and configure plot
 source_cause = ColumnDataSource(crash_df)
 j = figure(y_range=y_range,
            plot_width=500, plot_height=300,
@@ -101,6 +110,8 @@ crash_df = year_df_main.groupby(['borough', 'year']) \
                 .sort_values(['year'], ascending=True)
 crash_df['year_mean_deaths'] = crash_df.groupby(["year"]) \
                                         .transform('mean')
+
+# The formatting needed to make a grouped bar chart is challenging
 
 totals = []
 pops = []
@@ -230,6 +241,11 @@ rolling_df = pd.concat(rolling_df_list, axis=0)
 source = ColumnDataSource(rolling_df)
 
 # PLOTTING CALLS
+# I would like this to be a line, but that hovertools and 
+# interactive use only work for scatter plots in bokeh.
+# To update the data based on checkbox interaction, we view a 
+# data view called CDSView. These views do not work with line 
+# plots. The denisty of the data does give a near-line appearance.
 
 p = figure(title = "One Year Rolling Total 2012 - 2019",
            x_axis_label = "Time", 
@@ -241,6 +257,8 @@ p = figure(title = "One Year Rolling Total 2012 - 2019",
 
 p.add_layout(Title(text="Pedestrian and cyclist deaths in each borough",
                    align="left", text_font_style="normal"),"above")
+
+# Filter data based on checkbox selection
 for i in range(5):
     view=CDSView(source=source,
                  filters=[GroupFilter(column_name='borough',
