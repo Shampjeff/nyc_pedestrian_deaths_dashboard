@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import datetime
-from bokeh.plotting import figure, output_notebook, show, gmap
+from bokeh.plotting import figure, show, gmap
 from bokeh.models import CategoricalColorMapper, ColumnDataSource 
 from bokeh.models import CheckboxGroup, HoverTool, GMapOptions, Title
 from bokeh.models import Legend, CDSView, FactorRange, GroupFilter
